@@ -1,0 +1,15 @@
+{
+  "profiles": {
+    "CustomizeLib": {
+      "commandName": "Executable",
+      "executablePath": "C:\\Windows\\System32\\cmd.exe",
+      "commandLineArgs": "/c \"copy /Y \"CustomizeLib.dll\" \"D:\\SteamLibrary\\steamapps\\common\\StickFightTheGame\\BepInEx\\plugins\\CustomizeLib.dll\" && start steam://rungameid/674940\"",
+      "nativeDebugging": false
+    },
+    "copy": {
+      "commandName": "Executable",
+      "executablePath": "C:\\Windows\\System32\\cmd.exe",
+      "commandLineArgs": "/c \"copy /Y \"CustomizeLib.dll\" \"D:\\SteamLibrary\\steamapps\\common\\StickFightTheGame\\BepInEx\\plugins\\CustomizeLib.dll\""
+    }
+  }
+}
