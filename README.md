@@ -1,2 +1,2 @@
-## Sick as hell railgun
+## Beam -> Sick as hell railgun
 > from Murder Drones
