@@ -110,7 +110,7 @@ namespace CustomizeLib
 
     public class Helper
     {
-        // https://github.com/Infinite-75/PVZRHCustomization
+        // https://github.com/Infinite-75/PVZRHCustomization/blob/master/BepInEx/CustomizeLib.BepInEx/CustomCore.cs#L67
         public static AssetBundle GetAssetBundle(Assembly assembly, string name)
         {
             try
