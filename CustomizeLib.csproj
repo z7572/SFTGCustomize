@@ -4,11 +4,19 @@
     <LangVersion>preview</LangVersion>
     <AssemblyName>CustomizeLib</AssemblyName>
     <RootNamespace>CustomizeLib</RootNamespace>
+    <Authors>z7572</Authors>
+    <Version>1.2.1</Version>
+    <Product>SFTGCustomization</Product>
+    <Description>A BepInEx mod for Stick Fight: The Game</Description>
+    <AssemblyVersion>1.2.1</AssemblyVersion>
+    <FileVersion>1.2.1</FileVersion>
   </PropertyGroup>
   <ItemGroup>
+    <None Remove="nullblackhole" />
     <None Remove="sickashellrailgun" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="nullblackhole" />
     <EmbeddedResource Include="sickashellrailgun" />
   </ItemGroup>
   <ItemGroup>
@@ -51,4 +59,8 @@
       <HintPath>..\..\..\StickFight_Data\Managed\UnityEngine.UI.dll</HintPath>
     </Reference>
   </ItemGroup>
+  
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="copy /Y $(TargetPath) $(ProjectDir)\..\..\..\BepInEx\plugins\$(TargetFileName)&#xD;&#xA;" />
+  </Target>
 </Project>
