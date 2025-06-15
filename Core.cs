@@ -54,8 +54,7 @@ namespace CustomizeLib
                 {
                     if (__instance.gameObject.name == "Gun39")
                     {
-                        var mono = __instance.GetComponent<MonoBehaviour>();
-                        mono.StartCoroutine(ReplaceWeaponColliderCoroutine(__instance.gameObject, ab_railgun.LoadAsset<GameObject>("Gun39")));
+                        ReplaceWeaponCollider(__instance.gameObject, ab_railgun.LoadAsset<GameObject>("Gun39"));
                     }
                 }
             }
@@ -159,28 +158,6 @@ namespace CustomizeLib
             //}
             foreach (Transform child in newObj.transform)
             {
-                if (!child.name.ToLower().Contains(replaceObjName.ToLower())) continue;
-
-                GameObject newChild = Instantiate(child.gameObject, oriObj.transform);
-                newChild.name = child.name;
-                Destroy(newChild.GetComponent<BoxCollider>());
-            }
-        }
-
-        public static IEnumerator ReplaceWeaponColliderCoroutine(GameObject oriObj, GameObject newObj, string replaceObjName = "collider")
-        {
-            for (int i = 0; i < oriObj.transform.childCount; i++)
-            {
-                if (i % 10 == 0) yield return null;
-                Transform child = oriObj.transform.GetChild(i);
-                if (!child.name.ToLower().Contains(replaceObjName.ToLower())) continue;
-
-                child.GetComponent<MeshRenderer>().enabled = false;
-            }
-            for (int i = 0; i < newObj.transform.childCount; i++)
-            {
-                if (i % 5 == 0) yield return null;
-                Transform child = newObj.transform.GetChild(i);
                 if (!child.name.ToLower().Contains(replaceObjName.ToLower())) continue;
 
                 GameObject newChild = Instantiate(child.gameObject, oriObj.transform);
