@@ -11,7 +11,7 @@ using LevelEditor;
 
 namespace CustomizeLib;
 
-[BepInPlugin("z7572.sftgcustomization", "SFTGCustomization", "1.2.1")]
+[BepInPlugin("z7572.sftgcustomization", "SFTGCustomization", "1.3.0")]
 public class CustomizeCore : BaseUnityPlugin
 {
     public static AssetBundle ab_railgun;
