@@ -12,10 +12,6 @@
     <FileVersion>1.2.1</FileVersion>
   </PropertyGroup>
   <ItemGroup>
-    <None Remove="nullblackhole" />
-    <None Remove="sickashellrailgun" />
-  </ItemGroup>
-  <ItemGroup>
     <EmbeddedResource Include="nullblackhole" />
     <EmbeddedResource Include="sickashellrailgun" />
   </ItemGroup>
