@@ -12,6 +12,11 @@
     <FileVersion>1.3.0</FileVersion>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Remove="CodeToShow.cs" />
+    <Compile Remove="CustomizeLib\Code.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="CodeToShow.cs" />
     <EmbeddedResource Include="nullblackhole" />
     <EmbeddedResource Include="sickashellrailgun" />
   </ItemGroup>

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Reflection;
+using System.Collections;
 using UnityEngine;
 using HarmonyLib;
 
@@ -8,7 +9,7 @@ namespace CustomizeLib;
 
 public static class Helper
 {
-    public class CoroutineRunner : MonoBehaviour
+    class CoroutineRunner : MonoBehaviour
     {
         private static CoroutineRunner _instance;
         public static CoroutineRunner Instance
@@ -24,9 +25,11 @@ public static class Helper
                 return _instance;
             }
         }
-        public CoroutineRunner()
-        {
-        }
+    }
+
+    public static void StartCoroutine(IEnumerator coroutine)
+    {
+        CoroutineRunner.Instance.StartCoroutine(coroutine);
     }
 
     // https://github.com/Infinite-75/PVZRHCustomization/blob/master/BepInEx/CustomizeLib.BepInEx/CustomCore.cs#L67
@@ -89,4 +92,6 @@ public static class Helper
             }
         }
     }
+
+    public static Controller controller;
 }

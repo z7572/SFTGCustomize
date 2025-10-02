@@ -8,3 +8,5 @@
 ## BlackHole -> [NULL]
 
 ![image](Image/blackhole.jpg)
+
+![image](Image/blackhole_codes.png)

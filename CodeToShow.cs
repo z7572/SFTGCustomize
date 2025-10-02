@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using HarmonyLib;
 using LevelEditor;
+using Random = UnityEngine.Random;
 
 namespace CustomizeLib;
 
@@ -30,7 +31,7 @@ public class CustomizeCore : BaseUnityPlugin
         BlackHoleSound = ab_blackhole.LoadAsset<AudioClip>("heh, nothing personal kid");
 
         Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly());
-        CodeTextManager.InitTextAndFont("CodeToShow.cs");
+        CodeText.InitTextAndFont("ExampleCode.cs");
         Testing.TextureStore.Init();
     }
 
@@ -84,14 +85,11 @@ public class CustomizeCore : BaseUnityPlugin
             var codes = instructions.ToList();
             for (int i = 0; i < codes.Count; i++)
             {
-                // Find dropped and thrown weapon beam
                 if (codes[i].opcode == OpCodes.Call && codes[i].operand.ToString().Contains("Instantiate") && codes[i + 1].opcode != OpCodes.Dup)
                 {
-                    // gameObject = Instantiate(...)
-                    // SomeMethod(gameObject)
-                    codes.Insert(i + 1, new CodeInstruction(OpCodes.Dup)); // Copy gameObject
-                    codes.Insert(i + 2, new CodeInstruction(OpCodes.Ldarg_0)); // Fighting instance
-                    codes.Insert(i + 3, new CodeInstruction(OpCodes.Ldarg_1)); // bool justDrop
+                    codes.Insert(i + 1, new CodeInstruction(OpCodes.Dup));
+                    codes.Insert(i + 2, new CodeInstruction(OpCodes.Ldarg_0));
+                    codes.Insert(i + 3, new CodeInstruction(OpCodes.Ldarg_1));
                     codes.Insert(i + 4, new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(CustomizeCore), nameof(OnBeamThrow))));
                     continue;
                 }
@@ -99,16 +97,12 @@ public class CustomizeCore : BaseUnityPlugin
             return codes;
         }
 
-        // Enable obsolete snake bomb particle
-        //[HarmonyTranspiler]
-        //[HarmonyPatch(typeof(SnakeSpawner), "Start")]
         [Obsolete]
         public static IEnumerable<CodeInstruction> EnableSnakeBombParticleTranspiler(IEnumerable<CodeInstruction> instructions)
         {
             var codes = instructions.ToList();
             for (int i = 0; i < codes.Count; i++)
             {
-                // Remove code: UnityEngine.Object.Destroy(base.gameObject);
                 if (codes[i].opcode == OpCodes.Call && codes[i].operand.ToString().Contains("Destroy"))
                 {
                     codes.RemoveRange(i - 2, 3);
@@ -163,8 +157,6 @@ public class CustomizeCore : BaseUnityPlugin
 
     private static void ReplaceLogic()
     {
-        //var allAudioSources = Resources.FindObjectsOfTypeAll<AudioSource>().ToList();
-        //var allClips = Resources.FindObjectsOfTypeAll<AudioClip>().ToList();
         foreach (var oriPrefab in allPrefabs)
         {
             if (oriPrefab.name == "39 Beam")
@@ -219,7 +211,7 @@ public class CustomizeCore : BaseUnityPlugin
                 anim2.target = child;
                 newObj1.gameObject.AddComponent<RemoveOnLevelChange>();
                 newObj2.gameObject.AddComponent<RemoveOnLevelChange>();
-                var codeAnim = child.transform.parent.gameObject.AddComponent<CodeTextManager.SpawnCodes>();
+                var codeAnim = child.transform.parent.gameObject.AddComponent<CodeText.SpawnCodes>();
 
             }
         }
@@ -233,13 +225,6 @@ public class CustomizeCore : BaseUnityPlugin
 
             child.GetComponent<MeshRenderer>().enabled = false;
         }
-        //foreach (var renderer in newObj.GetComponentsInChildren<Renderer>())
-        //{
-        //    foreach (Material mat in renderer.materials)
-        //    {
-        //        mat.shader = Shader.Find("Standard");
-        //    }
-        //}
         foreach (Transform child in newObj.transform)
         {
             if (!child.name.ToLower().Contains(replaceObjName.ToLower())) continue;
