@@ -1,13 +1,14 @@
 ﻿using BepInEx;
-using System;
-using System.Linq;
-using System.Reflection;
-using System.Collections;
-using System.Reflection.Emit;
-using System.Collections.Generic;
-using UnityEngine;
 using HarmonyLib;
 using LevelEditor;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using System.Reflection.Emit;
+using UnityEngine;
+using static UnityEngine.ParticleSystem;
 
 namespace CustomizeLib;
 
@@ -18,16 +19,18 @@ public class CustomizeCore : BaseUnityPlugin
     public static AssetBundle ab_blackhole;
     public static List<GameObject> allPrefabs = new();
 
-    static AudioClip RechargingSound;
-    static AudioClip BlackHoleSound;
+    static AudioClip RechargingSfx;
+    static AudioClip BlackHoleFadeSfx;
+    static AudioClip BlackHoleBgm;
 
     public void Awake()
     {
         ab_railgun = Helper.GetAssetBundle(Assembly.GetExecutingAssembly(), "sickashellrailgun");
         ab_blackhole = Helper.GetAssetBundle(Assembly.GetExecutingAssembly(), "nullblackhole");
 
-        RechargingSound = ab_railgun.LoadAsset<AudioClip>("RECHARGING");
-        BlackHoleSound = ab_blackhole.LoadAsset<AudioClip>("heh, nothing personal kid");
+        RechargingSfx = ab_railgun.LoadAsset<AudioClip>("RECHARGING");
+        BlackHoleBgm = ab_blackhole.LoadAsset<AudioClip>("heh, nothing personal kid");
+        BlackHoleFadeSfx = ab_blackhole.LoadAsset<AudioClip>("blackhole fade");
 
         Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly());
         CodeTextManager.InitTextAndFont("CodeToShow.cs");
@@ -99,6 +102,18 @@ public class CustomizeCore : BaseUnityPlugin
             return codes;
         }
 
+        // Maybe we should patch typeof(BlackHole) and check this component by frame? idk which is better
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(ShrinkOverTime), "Start")]
+        public static void ShrinkOverTimeStartPrefix(ShrinkOverTime __instance)
+        {
+            if (__instance.gameObject.GetComponent<BlackHoleFade>() != null)
+            {
+                __instance.enabled = false;
+                __instance.gameObject.AddComponent<BlackHoleFadeAnim>();
+            }
+        }
+
         // Enable obsolete snake bomb particle
         //[HarmonyTranspiler]
         //[HarmonyPatch(typeof(SnakeSpawner), "Start")]
@@ -140,8 +155,8 @@ public class CustomizeCore : BaseUnityPlugin
             if (part == null || au == null) return;
 
             part.Play();
-            au.PlayOneShot(RechargingSound);
-            Destroy(au, RechargingSound.length);
+            au.PlayOneShot(RechargingSfx);
+            Destroy(au, RechargingSfx.length);
             fighting.StartCoroutine(Recharging());
 
             IEnumerator Recharging()
@@ -207,19 +222,26 @@ public class CustomizeCore : BaseUnityPlugin
             }
             if (oriPrefab.name == "BlackHole")
             {
-                oriPrefab.GetComponent<AudioSource>().clip = BlackHoleSound;
-                var newPrefab = ab_blackhole.LoadAsset<GameObject>("BlackHole").transform.Find("Hole");
+                oriPrefab.GetComponent<AudioSource>().clip = BlackHoleBgm;
+                var abPrefab = ab_blackhole.LoadAsset<GameObject>("BlackHole").transform.Find("Hole");
                 var child = oriPrefab.transform.Find("Hole");
                 child.Find("Particle System (1)").gameObject.SetActive(false);
-                var newObj1 = Instantiate(newPrefab.Find("OuterRing"), child);
-                var newObj2 = Instantiate(newPrefab.Find("NULL"), child);
+                var newObj1 = Instantiate(abPrefab.Find("OuterRing"), child);
+                var newObj2 = Instantiate(abPrefab.Find("NULL"), child);
                 var anim1 = newObj1.gameObject.AddComponent<BlackHoleAnim>();
                 var anim2 = newObj2.gameObject.AddComponent<BlackHoleAnim>();
                 anim1.target = child;
                 anim2.target = child;
                 newObj1.gameObject.AddComponent<RemoveOnLevelChange>();
                 newObj2.gameObject.AddComponent<RemoveOnLevelChange>();
-                var codeAnim = child.transform.parent.gameObject.AddComponent<CodeTextManager.SpawnCodes>();
+                newObj1.gameObject.AddComponent<BlackHoleFade>();
+                newObj2.gameObject.AddComponent<BlackHoleFade>();
+
+                // Original prefab will not destroyed, so we need to check if already has the component
+                if (oriPrefab.GetComponent<BlackHoleFade>() == null)
+                    oriPrefab.gameObject.AddComponent<BlackHoleFade>();
+                if (oriPrefab.GetComponent<CodeTextManager.SpawnCodes>() == null)
+                    oriPrefab.gameObject.AddComponent<CodeTextManager.SpawnCodes>();
 
             }
         }
@@ -269,6 +291,107 @@ public class CustomizeCore : BaseUnityPlugin
             if (!target) return;
             Vector3 newScale = target.localScale;
             transform.localScale = newScale * multiplier;
+        }
+    }
+
+    class BlackHoleFade : MonoBehaviour { }
+
+    class BlackHoleFadeAnim : MonoBehaviour
+    {
+        private static AudioSource au;
+        private static readonly object _lock = new();
+        void Awake()
+        {
+            var codeAnim = transform.root.GetComponentInChildren<CodeAnimation>();
+            codeAnim?.StopAllCoroutines();
+        }
+        void Start()
+        {
+            StartCoroutine(Blink());
+            StartCoroutine(Glitch());
+            if (au == null)
+            {
+                lock (_lock)
+                {
+                    if (au == null)
+                    {
+                        au = gameObject.AddComponent<AudioSource>();
+                        au.PlayOneShot(BlackHoleFadeSfx);
+                        transform.root.GetComponent<AudioSource>().Stop();
+                        Destroy(au, BlackHoleFadeSfx.length);
+                    }
+                }
+            }
+        }
+
+        IEnumerator Blink()
+        {
+            var RingRed = new Color(1f, 0.4f, 0.4f, 1f);
+            var RingYellow = new Color(1f, 0.878f, 0.421f, 1f);
+
+            var targetRenderer = GetComponent<ParticleSystemRenderer>();
+            var TextBaseColor = Color.white;
+            var TextEmissionRed = new Color(1f, 0f, 0f, 1f);
+            var TextEmissionYellow = new Color(1f, 0.883f, 0.057f, 1f);
+
+            if (gameObject.name.StartsWith("OuterRing"))
+            {
+                var particleSystem = GetComponent<ParticleSystem>();
+                if (particleSystem == null)
+                {
+                    yield break;
+                }
+
+                var main = particleSystem.main;
+                var emission = particleSystem.emission;
+                var particles = new ParticleSystem.Particle[particleSystem.main.maxParticles];
+
+                main.loop = true;
+                emission.enabled = true;
+
+                int blinkCount = 0;
+
+                while (blinkCount < 5)
+                {
+                    var targetColor = blinkCount % 2 == 0 ? RingRed : RingYellow;
+
+                    main.startColor = targetColor;
+
+                    int aliveParticleCount = particleSystem.GetParticles(particles);
+                    for (int i = 0; i < aliveParticleCount; i++)
+                    {
+                        particles[i].startColor = targetColor;
+                    }
+                    particleSystem.SetParticles(particles, aliveParticleCount);
+
+                    blinkCount++;
+                    yield return new WaitForSeconds(0.05f);
+                }
+            }
+            else if (gameObject.name.StartsWith("NULL"))
+            {
+                int blinkCount = 0;
+
+                while (blinkCount < 5)
+                {
+                    var emissionColor = blinkCount % 2 == 0 ? TextEmissionRed : TextEmissionYellow;
+                    targetRenderer.SetMaterialColor(TextBaseColor, emissionColor);
+                    blinkCount++;
+
+                    yield return new WaitForSeconds(0.05f);
+                }
+            }
+
+            yield return new WaitForSeconds(1f);
+            Destroy(gameObject);
+        }
+
+        // TODO: Add a glitch effect to the shader (too hard)
+        IEnumerator Glitch()
+        {
+            yield return new WaitForSeconds(0.2f);
+            // Implement glitch effect here
+
         }
     }
 }

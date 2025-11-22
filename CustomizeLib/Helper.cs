@@ -63,10 +63,11 @@ public static class Helper
         }
     }
 
-    public static void SetMaterialColor(this Renderer renderer, Color color, Color emissionColor = default)
+    public static void SetMaterialColor(this Renderer renderer, Color color) => SetMaterialColor(renderer, color, color);
+
+    public static void SetMaterialColor(this Renderer renderer, Color color, Color emissionColor)
     {
         var newMat = new Material(renderer.sharedMaterial) { color = color };
-        emissionColor = emissionColor != default ? emissionColor : color;
         newMat.SetColor("_EmissionColor", emissionColor);
         renderer.material = newMat;
         if (renderer.gameObject.GetComponent<MaterialCleanup>() == null)
